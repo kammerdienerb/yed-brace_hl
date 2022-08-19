@@ -7,6 +7,8 @@ void brace_hl_line_handler(yed_event *event);
 void brace_hl_find_braces(yed_frame *frame);
 void brace_hl_hl_braces(yed_event *event);
 
+#define LINE_MAX 500
+
 static int dirty;
 static int beg_row;
 static int beg_col;
@@ -28,6 +30,10 @@ int yed_plugin_boot(yed_plugin *self) {
     yed_plugin_add_event_handler(self, cursor_moved);
     yed_plugin_add_event_handler(self, buff_mod);
     yed_plugin_add_event_handler(self, line);
+
+    if (yed_get_var("brace-hl-max-line-length") == NULL) {
+        yed_set_var("brace-hl-max-line-length", XSTR(LINE_MAX));
+    }
 
     return 0;
 }
@@ -82,6 +88,7 @@ void brace_hl_line_handler(yed_event *event) {
 }
 
 void brace_hl_find_braces(yed_frame *frame) {
+    int        max;
     int        row, col;
     int        first_vis_row, last_vis_row;
     int        balance;
@@ -89,6 +96,9 @@ void brace_hl_find_braces(yed_frame *frame) {
     yed_glyph *g;
 
     beg_row = beg_col = end_row = end_col = 0;
+
+    max = LINE_MAX;
+    yed_get_var_as_int("brace-hl-max-line-length", &max);
 
     row           = frame->cursor_line;
     col           = frame->cursor_col;
@@ -102,6 +112,11 @@ void brace_hl_find_braces(yed_frame *frame) {
         line = yed_buff_get_line(frame->buffer, row);
 
         if (line->visual_width == 0) { continue; }
+
+        if (line->visual_width > max) {
+            beg_row = beg_col = end_row = end_col = 0;
+            return;
+        }
 
         if (row == frame->cursor_line) {
             if (col == 1) { continue; }
@@ -139,6 +154,11 @@ done_back:
         line = yed_buff_get_line(frame->buffer, row);
 
         if (line->visual_width == 0) { continue; }
+
+        if (line->visual_width > max) {
+            beg_row = beg_col = end_row = end_col = 0;
+            return;
+        }
 
         if (row != frame->cursor_line) {
             col = 1;
