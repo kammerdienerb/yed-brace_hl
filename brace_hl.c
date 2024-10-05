@@ -140,7 +140,7 @@ void brace_hl_find_braces(yed_frame *frame) {
                 balance -= 1;
             }
 
-            col -= yed_get_glyph_len(*g);
+            col -= yed_get_glyph_len(g);
         }
     }
 done_back:
@@ -179,7 +179,7 @@ done_back:
                 }
             }
 
-            col += yed_get_glyph_len(*g);
+            col += yed_get_glyph_len(g);
         }
     }
 
